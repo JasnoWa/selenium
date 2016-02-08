@@ -35,6 +35,7 @@ import org.apache.http.util.EntityUtils;
 import org.openqa.grid.common.exception.ClientGoneException;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.listeners.CommandListener;
+import org.openqa.grid.internal.listeners.ResponseModifyingListenter;
 import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.LegacySeleniumRequest;
 import org.openqa.grid.web.servlet.handler.RequestType;
@@ -263,7 +264,12 @@ public class TestSession {
               in = new ByteArrayInputStream(consumedNewWebDriverSessionBody);
             }
 
-            final byte[] bytes = drainInputStream(in);
+            byte[] bytes = drainInputStream(in);
+
+            if (slot.getProxy() instanceof ResponseModifyingListenter) {
+              bytes = ((ResponseModifyingListenter) slot.getProxy()).beforeForwardToRemoteEnd(this, request, bytes);
+            }
+
             writeRawBody(response, bytes);
             contentBeingForwarded = bytes;
 
